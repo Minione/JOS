@@ -13,6 +13,7 @@
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
+extern int mon_showmappings(int argc, char **argv, struct Trapframe *tf);
 
 struct Command {
 	const char *name;
@@ -25,6 +26,7 @@ static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
 	{ "backtrace", "Display information about the stack", mon_backtrace },
+        { "showmappings","Display in a useful and easy-to-read format all of the physical page mappings", mon_showmappings },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -140,7 +142,6 @@ monitor(struct Trapframe *tf)
 	char *buf;
 	cprintf("Welcome to the JOS kernel monitor!\n");
 	cprintf("Type 'help' for a list of commands.\n");
-        cprintf("%C7;12Welcome to the %C3;11JOS kernel monitor!\n");
 
 	while (1) {
 		buf = readline("K> ");
