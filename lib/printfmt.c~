@@ -84,8 +84,6 @@ void printfmt(void (*putch)(int, void*), void *putdat, const char *fmt, ...);
 void
 vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 {
-        ForegroundColor = 7;
-        BackgroundColor = 0;
 	register const char *p;
 	register int ch, err;
 	unsigned long long num;
@@ -161,6 +159,8 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
 
                 //color
                 case 'C':
+                        ForegroundColor = 7;
+                        BackgroundColor = 0;
 			for (forecolor = 0; ; ++fmt) {
 				forecolor = forecolor * 10 + ch - '0';
 				ch = *fmt;

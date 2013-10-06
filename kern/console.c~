@@ -169,6 +169,8 @@ cga_putc(int c)
         c &= 0x00FF;
         c |= ForegroundColor << 8;
         c |= BackgroundColor << 12;
+        ForegroundColor = 7;
+        BackgroundColor = 0;
  
 	switch (c & 0xff) {
 	case '\b':
