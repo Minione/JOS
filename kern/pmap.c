@@ -172,7 +172,7 @@ mem_init(void)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
 
-        boot_map_region(kern_pgdir, UPAGES,  UVPT - UPAGES,  PADDR(pages), PTE_U);
+        boot_map_region(kern_pgdir, UPAGES,  PTSIZE,  PADDR(pages), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -187,6 +187,7 @@ mem_init(void)
 	// Your code goes here:
 
         boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE , PADDR(bootstack), PTE_W);
+        cprintf("%x\n",PADDR(bootstack));
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -255,13 +256,7 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-//	size_t i;
-//	for (i = 0; i < npages; i++) {
-//		pages[i].pp_ref = 0;
-//		pages[i].pp_link = page_free_list;
-//		page_free_list = &pages[i];
-//	}
-        pages[0].pp_ref = 0;
+
         size_t i;
         size_t j  = PADDR(boot_alloc(0)) / PGSIZE;
         for (i = 1; i < npages_basemem; i++) {
@@ -916,27 +911,89 @@ int chartonum(char *str)
 
 int display(pde_t *p)
 {
-    cprintf("pa: %08x ", PTE_ADDR(*p));
+    cprintf("pa: 0x%08x ", PTE_ADDR(*p));
     cprintf("PTE_P: %d ", !!(*p & PTE_P));
-    cprintf("PTE_U: %d ", !!(*p & PTE_U));
-    cprintf("PTE_W: %d\n", !!(*p & PTE_W));
+    cprintf("PTE_W: %d ", !!(*p & PTE_W));
+    cprintf("PTE_U: %d\n", !!(*p & PTE_U));
     return 0;
 }
-//showmappings 0xefff8000 0xf0000000
+/*
+showmappings 0xefff8000 0xf0000000
+
+showmappings 0xef000000 0xef010000
+
+setperm 0xf0000000 0x3
+
+setperm 0xe0000000 0x7
+
+clearperm 0xe0000000
+
+*/
 int mon_showmappings(int argc, char **argv, struct Trapframe *tf)
 {
     pte_t *p; 
     struct PageInfo *page;
-    int low_va = chartonum (argv[1]);
-    int high_va = chartonum (argv[2]);
+    int low_va = chartonum(argv[1]);
+    int high_va = chartonum(argv[2]);
     low_va &= ~0xFFF;
     high_va = ROUNDUP(high_va, PGSIZE);
     int i;
     for (i = low_va; i <= high_va; i += PGSIZE) {
-        cprintf("va: %08x ",i);
+        cprintf("va: 0x%08x ",i);
         p = pgdir_walk(kern_pgdir, (void *) i, 0);
         if (p && (*p & PTE_P)) display(p);
-        else cprintf("Page Miss!\n");     
+        else cprintf("Page Not Present!\n");     
     }
     return 0;
 }
+
+int mon_setperm(int argc, char **argv, struct Trapframe *tf)
+{
+    int va = chartonum(argv[1]);
+    int perm = chartonum(argv[2]);
+    pte_t *p = pgdir_walk(kern_pgdir, (void *) va, 0);
+    if (p && (*p & PTE_P)) 
+    {
+       cprintf("Before Set:\n");
+       cprintf("va: 0x%08x ",va);
+       display(p);
+       *p |= 0xFFF;
+       *p &= ((~0xFFF) | perm | PTE_P);
+       cprintf("After Set:\n");
+       cprintf("va: 0x%08x ",va);
+       display(p);
+    }
+    else cprintf("Page Not Present!\n");  
+    return 0;
+}
+
+int mon_clearperm(int argc, char **argv, struct Trapframe *tf)
+{
+    int va = chartonum(argv[1]);
+    pte_t *p = pgdir_walk(kern_pgdir, (void *) va, 0);
+    if (p && (*p & PTE_P)) 
+    {
+       cprintf("Before Clear:\n");
+       cprintf("va: 0x%08x ",va);
+       display(p);
+       *p |= 0xFFF;
+       *p &= ((~0xFFF) | PTE_P);
+       cprintf("After Clear:\n");
+       cprintf("va: 0x%08x ",va);
+       display(p);
+    }
+    else cprintf("Page Not Present!\n");  
+    return 0;
+}
+
+int mon_dumpcontent(int argc, char **argv, struct Trapframe *tf)
+{
+    int* low_va = (int *)chartonum(argv[1]);
+    int* high_va = (int *)chartonum(argv[2]);
+    int* i;
+    for (i = low_va; i <= high_va; i++) {
+        cprintf("vm: 0x%x content: 0x%x\n", i, *i);
+    }
+    return 0;
+}
+

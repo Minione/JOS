@@ -14,6 +14,9 @@
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
 extern int mon_showmappings(int argc, char **argv, struct Trapframe *tf);
+extern int mon_setperm(int argc, char **argv, struct Trapframe *tf);
+extern int mon_clearperm(int argc, char **argv, struct Trapframe *tf);
+extern int mon_dumpcontent(int argc, char **argv, struct Trapframe *tf);
 
 struct Command {
 	const char *name;
@@ -26,7 +29,10 @@ static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
 	{ "backtrace", "Display information about the stack", mon_backtrace },
-        { "showmappings","Display in a useful and easy-to-read format all of the physical page mappings", mon_showmappings },
+        { "showmappings","Display the physical page mappings in a useful and easy-to-read format", mon_showmappings },
+        { "setperm" ,"Set the permissions", mon_setperm},
+        { "clearperm" ,"Clear the permissions", mon_clearperm},
+        { "dumpcontent" ,"Dump the contents of a range of memory", mon_dumpcontent},
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
