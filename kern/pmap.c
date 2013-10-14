@@ -187,7 +187,6 @@ mem_init(void)
 	// Your code goes here:
 
         boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE , PADDR(bootstack), PTE_W);
-        cprintf("%x\n",PADDR(bootstack));
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
