@@ -987,11 +987,18 @@ int mon_clearperm(int argc, char **argv, struct Trapframe *tf)
 
 int mon_dumpcontent(int argc, char **argv, struct Trapframe *tf)
 {
-    int* low_va = (int *)chartonum(argv[1]);
-    int* high_va = (int *)chartonum(argv[2]);
-    int* i;
-    for (i = low_va; i <= high_va; i++) {
-        cprintf("vm: 0x%x content: 0x%x\n", i, *i);
+    if (argv[1][0] == 'v') {
+       int* low_va = (int *)chartonum(argv[2]);
+       int* high_va = (int *)chartonum(argv[3]);
+       int* i;
+       for (i = low_va; i <= high_va; i++)
+           cprintf("vm: 0x%x content: 0x%x\n", i, *i);
+    } else {
+       int* low_va = (int *) KADDR(chartonum(argv[2]));
+       int* high_va = (int *) KADDR(chartonum(argv[3]));
+       int* i;
+       for (i = low_va; i <= high_va; i++)
+           cprintf("pm: 0x%x content: 0x%x\n", PADDR(i), *i);
     }
     return 0;
 }
