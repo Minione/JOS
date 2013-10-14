@@ -180,6 +180,9 @@ mem_init(void)
 	// Your code goes here:
 
         boot_map_region(kern_pgdir, UPAGES,  PTSIZE,  PADDR(pages), PTE_U);
+        cprintf("%x\n",UVPT);
+        cprintf("%x\n",PTSIZE);
+        cprintf("~~%x\n",PADDR(kern_pgdir));
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -194,6 +197,9 @@ mem_init(void)
 	// Your code goes here:
 
         boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE , PADDR(bootstack), PTE_W);
+        cprintf("%x\n",PADDR(bootstack));
+        cprintf("%x\n",KSTACKTOP - KSTKSIZE);
+        cprintf("%x\n",KSTKSIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
