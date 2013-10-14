@@ -10,6 +10,8 @@
 #include <kern/kclock.h>
 #include <kern/monitor.h>
 
+#define PGSIZE_EXT (4096*1024) 
+
 // These variables are set by i386_detect_memory()
 size_t npages;			// Amount of physical memory (in pages)
 static size_t npages_basemem;	// Amount of base memory (in pages)
@@ -120,6 +122,11 @@ mem_init(void)
 	uint32_t cr0;
 	size_t n;
 
+        uint32_t cr4;
+        cr4 = rcr4();
+        cr4 |= CR4_PSE;
+        lcr4(cr4);
+
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
 
@@ -196,7 +203,7 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-        boot_map_region(kern_pgdir, KERNBASE, ~KERNBASE+1, 0, PTE_W);
+        boot_map_region(kern_pgdir, KERNBASE, ~KERNBASE+1, 0, PTE_W | PTE_PS);
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -374,13 +381,22 @@ static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
 	// Fill this function in
-        size_t i;
-        for (i = 0; i < size / PGSIZE; i++) {
-            pte_t *p = pgdir_walk(pgdir, (void*)va, 1);
-            *p = pa | perm | PTE_P; 
-            va += PGSIZE;
-            pa += PGSIZE;
-        }
+        if (perm & PTE_PS) { 
+           size_t i;
+           for (i = 0; i < size / PGSIZE_EXT; i++) {
+	       pgdir[PDX(va)] = (pa & (0xffc00000)) | perm | PTE_P; 
+               va += PGSIZE_EXT;
+               pa += PGSIZE_EXT;
+           }
+        } else {
+          size_t i;
+          for (i = 0; i < size / PGSIZE; i++) {
+              pte_t *p = pgdir_walk(pgdir, (void*)va, 1);
+              *p = pa | perm | PTE_P; 
+              va += PGSIZE;
+              pa += PGSIZE;
+          }
+       }
 }
 
 //
@@ -695,6 +711,7 @@ check_va2pa(pde_t *pgdir, uintptr_t va)
 	pgdir = &pgdir[PDX(va)];
 	if (!(*pgdir & PTE_P))
 		return ~0;
+        if (*pgdir & PTE_PS) return ((*pgdir & 0xffc00000) | (va & 0x3fffff));
 	p = (pte_t*) KADDR(PTE_ADDR(*pgdir));
 	if (!(p[PTX(va)] & PTE_P))
 		return ~0;
