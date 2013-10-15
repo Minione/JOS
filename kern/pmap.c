@@ -916,18 +916,7 @@ int display(pde_t *p)
     cprintf("PTE_U: %d\n", !!(*p & PTE_U));
     return 0;
 }
-/*
-showmappings 0xefff8000 0xf0000000
 
-showmappings 0xef000000 0xef010000
-
-setperm 0xf0000000 0x3
-
-setperm 0xe0000000 0x7
-
-clearperm 0xe0000000
-
-*/
 int mon_showmappings(int argc, char **argv, struct Trapframe *tf)
 {
     pte_t *p; 
@@ -992,13 +981,13 @@ int mon_dumpcontent(int argc, char **argv, struct Trapframe *tf)
        int* high_va = (int *)chartonum(argv[3]);
        int* i;
        for (i = low_va; i <= high_va; i++)
-           cprintf("vm: 0x%x content: 0x%x\n", i, *i);
+           cprintf("va: 0x%x content: 0x%x\n", i, *i);
     } else {
        int* low_va = (int *) KADDR(chartonum(argv[2]));
        int* high_va = (int *) KADDR(chartonum(argv[3]));
        int* i;
        for (i = low_va; i <= high_va; i++)
-           cprintf("pm: 0x%x content: 0x%x\n", PADDR(i), *i);
+           cprintf("pa: 0x%x content: 0x%x\n", PADDR(i), *i);
     }
     return 0;
 }
