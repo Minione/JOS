@@ -87,7 +87,7 @@ trap_init(void)
         void trap_SIMDERR();
         void trap_SYSCALL();
 
-        SETGATE(idt[T_DIVIDE], 0, GD_KT, trap_DIVIDE, 0);
+/*        SETGATE(idt[T_DIVIDE], 0, GD_KT, trap_DIVIDE, 0);
         SETGATE(idt[T_DEBUG], 0, GD_KT, trap_DEBUG, 0);
         SETGATE(idt[T_NMI], 0, GD_KT, trap_NMI, 0);
         SETGATE(idt[T_BRKPT], 0, GD_KT, trap_BRKPT, 3);
@@ -106,7 +106,7 @@ trap_init(void)
         SETGATE(idt[T_MCHK], 0, GD_KT, trap_MCHK, 0);
         SETGATE(idt[T_SIMDERR], 0, GD_KT, trap_SIMDERR, 0);
         SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_SYSCALL, 3);
-        
+  */      
 
 	// Per-CPU setup 
 	trap_init_percpu();
