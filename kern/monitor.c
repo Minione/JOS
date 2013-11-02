@@ -11,6 +11,7 @@
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
 #include <kern/trap.h>
+#include <kern/env.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -34,6 +35,8 @@ static struct Command commands[] = {
         { "setperm" ,"Set the permissions", mon_setperm},
         { "clearperm" ,"Clear the permissions", mon_clearperm},
         { "dumpcontent" ,"Dump the contents of a range of memory", mon_dumpcontent},
+        { "continue", "continue", mon_continue},
+        { "si", "singlestep", mon_singlestep}
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -98,6 +101,37 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
         return 0;
 }
 
+int
+mon_continue(int argc, char **argv, struct Trapframe *tf)
+{
+        if (tf != NULL) {
+           cprintf("Continue execution\n");
+           tf->tf_eflags &= ~FL_TF;
+           env_run(curenv);
+	} else {
+          cprintf("mon_continue: tf is NULL!\n");
+          return -1;
+        }
+        return 0;   
+}
+
+int
+mon_singlestep(int argc, char **argv, struct Trapframe *tf)
+{
+        if (tf != NULL) {
+           cprintf("Single step\n");
+           tf->tf_eflags |= FL_TF;
+           struct Eipdebuginfo info;
+           debuginfo_eip(tf->tf_eip, &info);
+           cprintf("%s:%d: %.*s+%d\n",info.eip_file,info.eip_line,
+                   info.eip_fn_namelen,info.eip_fn_name,tf->tf_eip-info.eip_fn_addr);
+           env_run(curenv);
+	} else {
+          cprintf("mon_singlestep: tf is NULL!\n");
+          return -1;
+        }
+        return 0;   
+}
 
 /***** Kernel monitor command interpreter *****/
 
@@ -152,7 +186,6 @@ monitor(struct Trapframe *tf)
 
 	if (tf != NULL)
 		print_trapframe(tf);
-
 
 	while (1) {
 		buf = readline("K> ");
