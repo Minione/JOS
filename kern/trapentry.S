@@ -20,52 +20,71 @@
  *   void NAME();
  * where NAME is the argument passed to TRAPHANDLER.
  */
-#define TRAPHANDLER(name, num)                                                \
-        .globl name;                /* define global symbol for 'name' */        \
-        .type name, @function;        /* symbol type is function */                \
-        .align 2;                /* align function definition */                \
-        name:                        /* function starts here */                \
-        pushl $(num);                                                        \
-        jmp _alltraps
+#define TRAPHANDLER(name, num, dpl)                 \
+        .text;                                      \
+        .globl name;                                \
+        .type name, @function;                      \
+        .align 2;                                   \
+        name:                                       \
+        pushl $(num);                               \
+        jmp _alltraps;                              \
+        .data;                                      \
+        .long name;                                 \
+        .long dpl
 
 /* Use TRAPHANDLER_NOEC for traps where the CPU doesn't push an error code.
  * It pushes a 0 in place of the error code, so the trap frame has the same
  * format in either case.
  */
-#define TRAPHANDLER_NOEC(name, num)                                        \
-        .globl name;                                                        \
-        .type name, @function;                                                \
-        .align 2;                                                        \
-        name:                                                                \
-        pushl $0;                                                        \
-        pushl $(num);                                                        \
-        jmp _alltraps                                                  
-.text
+#define TRAPHANDLER_NOEC(name, num, dpl)            \
+        .text;                                      \
+        .globl name;                                \
+        .type name, @function;                      \
+        .align 2;                                   \
+        name:                                       \
+        pushl $0;                                   \
+        pushl $(num);                               \
+        jmp _alltraps;                              \
+        .data;                                      \
+        .long name;                                 \
+        .long dpl
+
+
+#define NOTRAP()\
+        .data;\
+        .long 0;\
+        .long 0
+
+.data
+.global idt_off;
+idt_off:
 
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
 
 
-TRAPHANDLER_NOEC(trap_DIVIDE, T_DIVIDE);
-TRAPHANDLER_NOEC(trap_DEBUG, T_DEBUG);
-TRAPHANDLER_NOEC(trap_NMI, T_NMI);
-TRAPHANDLER_NOEC(trap_BRKPT, T_BRKPT);
-TRAPHANDLER_NOEC(trap_OFLOW, T_OFLOW);
-TRAPHANDLER_NOEC(trap_BOUND, T_BOUND);
-TRAPHANDLER_NOEC(trap_ILLOP, T_ILLOP);
-TRAPHANDLER_NOEC(trap_DEVICE, T_DEVICE);
-TRAPHANDLER(trap_DBLFLT, T_DBLFLT);
-TRAPHANDLER(trap_TSS, T_TSS);
-TRAPHANDLER(trap_SEGNP, T_SEGNP);
-TRAPHANDLER(trap_STACK, T_STACK);
-TRAPHANDLER(trap_GPFLT, T_GPFLT);
-TRAPHANDLER(trap_PGFLT, T_PGFLT);
-TRAPHANDLER_NOEC(trap_FPERR, T_FPERR);
-TRAPHANDLER(trap_ALIGN, T_ALIGN);
-TRAPHANDLER_NOEC(trap_MCHK, T_MCHK);
-TRAPHANDLER_NOEC(trap_SIMDERR, T_SIMDERR);
-TRAPHANDLER_NOEC(trap_SYSCALL, T_SYSCALL);
+TRAPHANDLER_NOEC(trap_DIVIDE, T_DIVIDE, 0);
+TRAPHANDLER_NOEC(trap_DEBUG, T_DEBUG, 0);
+TRAPHANDLER_NOEC(trap_NMI, T_NMI, 0);
+TRAPHANDLER_NOEC(trap_BRKPT, T_BRKPT, 3);
+TRAPHANDLER_NOEC(trap_OFLOW, T_OFLOW, 0);
+TRAPHANDLER_NOEC(trap_BOUND, T_BOUND, 0);
+TRAPHANDLER_NOEC(trap_ILLOP, T_ILLOP, 0);
+TRAPHANDLER_NOEC(trap_DEVICE, T_DEVICE, 0);
+TRAPHANDLER(trap_DBLFLT, T_DBLFLT, 0);
+NOTRAP();
+TRAPHANDLER(trap_TSS, T_TSS, 0);
+TRAPHANDLER(trap_SEGNP, T_SEGNP, 0);
+TRAPHANDLER(trap_STACK, T_STACK, 0);
+TRAPHANDLER(trap_GPFLT, T_GPFLT, 0);
+TRAPHANDLER(trap_PGFLT, T_PGFLT, 0);
+NOTRAP();
+TRAPHANDLER_NOEC(trap_FPERR, T_FPERR, 0);
+TRAPHANDLER(trap_ALIGN, T_ALIGN, 0);
+TRAPHANDLER_NOEC(trap_MCHK, T_MCHK, 0);
+TRAPHANDLER_NOEC(trap_SIMDERR, T_SIMDERR, 0);
+TRAPHANDLER_NOEC(trap_SYSCALL, T_SYSCALL, 3);
 
 
 /*
