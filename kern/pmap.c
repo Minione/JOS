@@ -361,7 +361,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
         pgdir = &pgdir[PDX(va)];
         if (*pgdir & PTE_P) {
            p = KADDR(PTE_ADDR(*pgdir));
-           p +=PTX(va);
+           p += PTX(va);
            return p;      
         }
 
@@ -531,8 +531,26 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+        size_t i;
+        perm = perm| PTE_P| PTE_U;
+        size_t lva = (uintptr_t)ROUNDDOWN(va, PGSIZE);
+        size_t rva = (uintptr_t)ROUNDUP(va + len , PGSIZE);
+        
+        for (i = lva; i < rva; i += PGSIZE) {
+            if (i >= ULIM) {
+               if (i < (uintptr_t)va) user_mem_check_addr = (uintptr_t)va;
+               else user_mem_check_addr = i;
+               return -E_FAULT;
+            }
 
-	return 0;
+            pte_t *p = pgdir_walk(env->env_pgdir, (void*) i, 0);
+            if ((p == NULL) || ((*p & perm) != perm)) {
+               if (i < (uintptr_t)va) user_mem_check_addr = (uintptr_t)va;
+               else user_mem_check_addr = i;
+               return -E_FAULT;
+            }
+        }
+        return 0;
 }
 
 //

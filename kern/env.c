@@ -288,7 +288,7 @@ region_alloc(struct Env *e, void *va, size_t len)
         int i;
         struct PageInfo *p;
         for (i = 0; i < len; i += PGSIZE, va += PGSIZE) {
-            p = page_alloc(ALLOC_ZERO);
+            p = page_alloc(0);
             if (p) {
               int r = page_insert (e->env_pgdir, p, va, PTE_U | PTE_W);
               if (r!=0) panic("region_alloc: %e\n",r);

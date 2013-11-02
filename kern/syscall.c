@@ -21,6 +21,7 @@ sys_cputs(const char *s, size_t len)
 	// Destroy the environment if not.
 
 	// LAB 3: Your code here.
+        user_mem_assert(curenv, s, len, PTE_U);
 
 	// Print the string supplied by the user.
 	cprintf("%.*s", len, s);
@@ -42,7 +43,7 @@ sys_getenvid(void)
 }
 
 // Destroy a given environment (possibly the currently running environment).
-//
+//t
 // Returns 0 on success, < 0 on error.  Errors are:
 //	-E_BAD_ENV if environment envid doesn't currently exist,
 //		or the caller doesn't have permission to change envid.
@@ -70,6 +71,19 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 	// Return any appropriate return value.
 	// LAB 3: Your code here.
 
-	panic("syscall not implemented");
+        if (syscallno == SYS_cputs) {
+          sys_cputs((const char *) a1, (size_t) a2);
+          return 0;
+        }
+
+        if (syscallno == SYS_cgetc) return sys_cgetc();
+
+        if (syscallno == SYS_getenvid) return sys_getenvid();
+
+        if (syscallno == SYS_env_destroy) return sys_env_destroy((envid_t) a1);
+
+        return -E_INVAL;
+
+//	panic("syscall not implemented");
 }
 
