@@ -283,6 +283,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 
         if (syscallno == SYS_env_destroy) return sys_env_destroy((envid_t) a1);
 
+        if (syscallno == SYS_yield) { sys_yield(); return 0; }
+
         return -E_INVAL;
 
 //	panic("syscall not implemented");

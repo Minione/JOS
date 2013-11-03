@@ -268,6 +268,11 @@ mem_init_mp(void)
 	//
 	// LAB 4: Your code here:
 
+        int n;
+        for (n = 0; n < NCPU; n++) {
+                uint32_t KSTACKTOP_n = KSTACKTOP - n * (KSTKSIZE + KSTKGAP);
+                boot_map_region(kern_pgdir, KSTACKTOP_n - KSTKSIZE, KSTKSIZE , PADDR(percpu_kstacks[n]), PTE_W);
+        }
 }
 
 // --------------------------------------------------------------
@@ -308,16 +313,21 @@ page_init(void)
 	// free pages!
 
         size_t i;
-        size_t j  = PADDR(boot_alloc(0)) / PGSIZE;
+        size_t j = PADDR(boot_alloc(0)) / PGSIZE;
+        size_t k = MPENTRY_PADDR / PGSIZE;
         for (i = 1; i < npages_basemem; i++) {
+            if (i != k) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];                
+		page_free_list = &pages[i];
+            }           
         }
         for (i =j; i < npages; i++) {
+            if (i != k) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];                
+            }
         }
 }
 
@@ -572,7 +582,15 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	panic("mmio_map_region not implemented");
+
+        size_t endpa = (uintptr_t)ROUNDUP(pa + size, PGSIZE);
+        pa = ROUNDDOWN(pa, PGSIZE);
+        size = endpa - pa;
+        if (size <= PTSIZE) boot_map_region(kern_pgdir, base, size, pa, PTE_W | PTE_PCD |PTE_PWT);
+        else panic("mmio_map_region not implemented");
+        base += size;
+        return (void *)(base - size);
+
 }
 
 static uintptr_t user_mem_check_addr;

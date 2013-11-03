@@ -146,7 +146,20 @@ trap_init_percpu(void)
 	//
 	// LAB 4: Your code here:
 
-	// Setup a TSS so that we get the right stack
+        int n = thiscpu->cpu_id;
+       
+        thiscpu -> cpu_ts.ts_esp0 = KSTACKTOP -n * (KSTKSIZE + KSTKGAP);
+        thiscpu -> cpu_ts.ts_ss0 = GD_KD;
+
+        gdt[(GD_TSS0 >> 3) + n] = SEG16(STS_T32A, (uint32_t) (&(thiscpu -> cpu_ts)),
+                                     sizeof(struct Taskstate), 0);
+        gdt[(GD_TSS0 >> 3) + n].sd_s = 0;
+
+        ltr( (GD_TSS0  + (n << 3)) & ~0x7 );
+        lidt(&idt_pd);
+
+
+/*	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
 	ts.ts_esp0 = KSTACKTOP;
 	ts.ts_ss0 = GD_KD;
@@ -161,7 +174,7 @@ trap_init_percpu(void)
 	ltr(GD_TSS0);
 
 	// Load the IDT
-	lidt(&idt_pd);
+	lidt(&idt_pd);*/
 }
 
 void
@@ -284,6 +297,7 @@ trap(struct Trapframe *tf)
 		// Acquire the big kernel lock before doing any
 		// serious kernel work.
 		// LAB 4: Your code here.
+                lock_kernel();
 		assert(curenv);
 
 		// Garbage collect if current enviroment is a zombie
