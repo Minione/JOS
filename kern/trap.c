@@ -151,8 +151,7 @@ trap_init_percpu(void)
         thiscpu -> cpu_ts.ts_esp0 = KSTACKTOP -n * (KSTKSIZE + KSTKGAP);
         thiscpu -> cpu_ts.ts_ss0 = GD_KD;
 
-        gdt[(GD_TSS0 >> 3) + n] = SEG16(STS_T32A, (uint32_t) (&(thiscpu -> cpu_ts)),
-                                     sizeof(struct Taskstate), 0);
+        gdt[(GD_TSS0 >> 3) + n] = SEG16(STS_T32A, (uint32_t) (&(thiscpu -> cpu_ts)), sizeof(struct Taskstate), 0);
         gdt[(GD_TSS0 >> 3) + n].sd_s = 0;
 
         ltr( (GD_TSS0  + (n << 3)) & ~0x7 );
@@ -392,6 +391,7 @@ page_fault_handler(struct Trapframe *tf)
            utf->utf_eip = tf->tf_eip;
            utf->utf_eflags = tf->tf_eflags;
            utf->utf_esp = tf->tf_esp;
+           utf->utf_err = tf->tf_err;
            curenv->env_tf.tf_eip = (uint32_t) curenv->env_pgfault_upcall;
            curenv->env_tf.tf_esp = (uint32_t) utf;
            env_run(curenv);

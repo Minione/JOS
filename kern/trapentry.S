@@ -69,6 +69,7 @@ TRAPHANDLER_NOEC(trap_SIMDERR, T_SIMDERR);
 TRAPHANDLER_NOEC(trap_SYSCALL, T_SYSCALL);
 
 
+
 /*
  * Lab 3: Your code here for _alltraps
  */
