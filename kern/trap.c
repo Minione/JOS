@@ -114,6 +114,39 @@ trap_init(void)
         SETGATE(idt[T_SIMDERR], 0, GD_KT, trap_SIMDERR, 0);
         SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_SYSCALL, 3);
         
+        void trap_IRQ0();
+        void trap_IRQ1();
+        void trap_IRQ2();
+        void trap_IRQ3();
+        void trap_IRQ4();
+        void trap_IRQ5();
+        void trap_IRQ6();
+        void trap_IRQ7();
+        void trap_IRQ8();
+        void trap_IRQ9();
+        void trap_IRQ10();
+        void trap_IRQ11();
+        void trap_IRQ12();
+        void trap_IRQ13();
+        void trap_IRQ14();
+        void trap_IRQ15();
+
+        SETGATE(idt[IRQ_OFFSET+0], 0, GD_KT, trap_IRQ0, 0);
+        SETGATE(idt[IRQ_OFFSET+1], 0, GD_KT, trap_IRQ1, 0);
+        SETGATE(idt[IRQ_OFFSET+2], 0, GD_KT, trap_IRQ2, 0);
+        SETGATE(idt[IRQ_OFFSET+3], 0, GD_KT, trap_IRQ3, 0);
+        SETGATE(idt[IRQ_OFFSET+4], 0, GD_KT, trap_IRQ4, 0);
+        SETGATE(idt[IRQ_OFFSET+5], 0, GD_KT, trap_IRQ5, 0);
+        SETGATE(idt[IRQ_OFFSET+6], 0, GD_KT, trap_IRQ6, 0);
+        SETGATE(idt[IRQ_OFFSET+7], 0, GD_KT, trap_IRQ7, 0);
+        SETGATE(idt[IRQ_OFFSET+8], 0, GD_KT, trap_IRQ8, 0);
+        SETGATE(idt[IRQ_OFFSET+9], 0, GD_KT, trap_IRQ9, 0);
+        SETGATE(idt[IRQ_OFFSET+10], 0, GD_KT, trap_IRQ10, 0);
+        SETGATE(idt[IRQ_OFFSET+11], 0, GD_KT, trap_IRQ11, 0);
+        SETGATE(idt[IRQ_OFFSET+12], 0, GD_KT, trap_IRQ12, 0);
+        SETGATE(idt[IRQ_OFFSET+13], 0, GD_KT, trap_IRQ13, 0);
+        SETGATE(idt[IRQ_OFFSET+14], 0, GD_KT, trap_IRQ14, 0);
+        SETGATE(idt[IRQ_OFFSET+15], 0, GD_KT, trap_IRQ15, 0);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -239,7 +272,7 @@ trap_dispatch(struct Trapframe *tf)
                            tf->tf_regs.reg_ebx,
                            tf->tf_regs.reg_edi,
                            tf->tf_regs.reg_esi);
-           if (r < 0) panic("trap_dispatch: %e\n", r);
+//           if (r < 0) panic("trap_dispatch: %e\n", r);
            tf->tf_regs.reg_eax = r;
            return ;
         }
@@ -259,6 +292,11 @@ trap_dispatch(struct Trapframe *tf)
 	// interrupt using lapic_eoi() before calling the scheduler!
 	// LAB 4: Your code here.
 
+        if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) {
+           lapic_eoi();
+           sched_yield();
+           return;
+        }
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
