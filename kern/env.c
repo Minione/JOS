@@ -296,7 +296,7 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   You should round va down, and round (va + len) up.
 	//   (Watch out for corner-cases!)
 
-        va = ROUNDDOWN (va , PGSIZE);
+/*        va = ROUNDDOWN (va , PGSIZE);
         len = ROUNDUP (len, PGSIZE);
         int i;
         struct PageInfo *p;
@@ -304,6 +304,17 @@ region_alloc(struct Env *e, void *va, size_t len)
             p = page_alloc(0);
             if (p) {
               int r = page_insert (e->env_pgdir, p, va, PTE_U | PTE_W);
+              if (r!=0) panic("region_alloc: %e\n",r);
+            } else panic("region_alloc: Out of free memory\n");
+        }*/
+        uint32_t lowva = (uint32_t)ROUNDDOWN (va , PGSIZE);
+        uint32_t highva = (uint32_t)ROUNDUP (va + len, PGSIZE);
+        uint32_t addr = lowva; 
+        struct PageInfo *p;
+        for (; addr < highva; addr += PGSIZE) {
+            p = page_alloc(0);
+            if (p) {
+              int r = page_insert (e->env_pgdir, p, (void *)addr, PTE_U | PTE_W);
               if (r!=0) panic("region_alloc: %e\n",r);
             } else panic("region_alloc: Out of free memory\n");
         }
@@ -404,6 +415,7 @@ env_create(uint8_t *binary, size_t size, enum EnvType type)
         int r;
         if ((r = env_alloc(&e, 0)) < 0) panic("env_create: %e\n",r);
         load_icode (e, binary, size);
+        e->env_type = type;
 
 	// If this is the file server (type == ENV_TYPE_FS) give it I/O privileges.
 	// LAB 5: Your code here.
