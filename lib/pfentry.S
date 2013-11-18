@@ -68,7 +68,7 @@ _pgfault_upcall:
 
         movl 0x30(%esp), %eax
         subl $0x4, %eax
-        mov %eax, 0x30(%esp)
+        movl %eax, 0x30(%esp)
         movl 0x28(%esp), %ebx
         movl %ebx, (%eax)
 
