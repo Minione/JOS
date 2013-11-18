@@ -40,12 +40,19 @@ sched_yield(void)
           max = -1;
         }
         k = -1;
+        int find = 0;
         for (j = 0 ; j < NENV; ++j) {
             i = (i + 1) % NENV;
             if (envs[i].env_status == ENV_RUNNABLE) {
-               if (envs[i].env_priority >= max) {
+               if (envs[i].env_priority > max) {
                   max = envs[i].env_priority;
                   k = i;
+                  find = 1;
+               }
+               if (envs[i].env_priority == max && find == 0) {
+                  max = envs[i].env_priority;
+                  k = i;
+                  find = 1;
                }
             }
         }
