@@ -362,6 +362,20 @@ sys_ipc_recv(void *dstva)
 	return 0;
 }
 
+static int
+sys_env_set_priority(envid_t envid, int priority)
+{
+	// LAB 4: Your code here.
+
+        struct Env *e;
+        int r;
+        if ((r = envid2env(envid, &e, 1) < 0)) return r;
+        e->env_priority = priority;
+        return 0;
+
+	panic("sys_env_set_priority not implemented");
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -401,6 +415,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
         if (syscallno == SYS_ipc_try_send) return sys_ipc_try_send((envid_t)a1, (uint32_t)a2, (void *)a3, (unsigned)a4);
 
         if (syscallno == SYS_ipc_recv) return sys_ipc_recv((void *)a1);
+
+        if (syscallno == SYS_env_set_priority) return sys_env_set_priority((envid_t)a1, (int)a2);
 
         return -E_INVAL;
 

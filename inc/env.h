@@ -28,6 +28,10 @@ typedef int32_t envid_t;
 #define LOG2NENV		10
 #define NENV			(1 << LOG2NENV)
 #define ENVX(envid)		((envid) & (NENV - 1))
+#define ENV_PRIORITY_0          0
+#define ENV_PRIORITY_1          1
+#define ENV_PRIORITY_2          2
+#define ENV_PRIORITY_3          3
 
 // Values of env_status in struct Env
 enum {
@@ -52,6 +56,7 @@ struct Env {
 	unsigned env_status;		// Status of the environment
 	uint32_t env_runs;		// Number of times environment has run
 	int env_cpunum;			// The CPU that the env is running on
+        int env_priority;               // The environment's priority
 
 	// Address space
 	pde_t *env_pgdir;		// Kernel virtual address of page dir
