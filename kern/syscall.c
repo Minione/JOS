@@ -4,6 +4,7 @@
 #include <inc/error.h>
 #include <inc/string.h>
 #include <inc/assert.h>
+#include <inc/elf.h>
 
 #include <kern/env.h>
 #include <kern/pmap.h>
@@ -382,6 +383,41 @@ sys_ipc_recv(void *dstva)
 	return 0;
 }
 
+static int
+sys_env_exec(uint32_t esp, uint32_t eip, struct Proghdr *ph, uint32_t e_phnum)
+{
+        struct Env *e;
+        struct PageInfo *pg;
+        int i, r, perm;
+        uint32_t va;
+        uint32_t tempva = 0x40000000;
+        perm = 0;
+
+	for (i = 0; i < e_phnum; i++, ph++) {
+		if (ph->p_type != ELF_PROG_LOAD)
+			continue;
+		perm = PTE_P | PTE_U;
+		if (ph->p_flags & ELF_PROG_FLAG_WRITE)
+			perm |= PTE_W;
+                for (va = ROUNDDOWN(ph->p_va, PGSIZE); va != ROUNDUP(ph->p_va + ph->p_memsz, PGSIZE); va += PGSIZE) {
+                    if ((pg = page_lookup(curenv->env_pgdir, (void *)(tempva), NULL)) == NULL) return -E_INVAL;
+                    if ((r = page_insert(curenv->env_pgdir, pg, (void *)va, perm)) < 0) return r;
+                    page_remove(curenv->env_pgdir, (void *)tempva);
+                    tempva += PGSIZE;
+                }
+	}
+
+        if ((pg = page_lookup(curenv->env_pgdir, (void *)UTEMP, NULL)) == NULL) return -E_INVAL;
+        if ((r = page_insert(curenv->env_pgdir, pg, (void *)(USTACKTOP - PGSIZE), PTE_P | PTE_U | PTE_W)) < 0) return r;
+        page_remove(curenv->env_pgdir, (void *)UTEMP);
+	
+        curenv->env_tf.tf_esp = esp;
+        curenv->env_tf.tf_eip = eip;
+
+        env_run(curenv);
+
+}
+
 // Dispatches to the correct kernel function, passing the arguments.
 int32_t
 syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5)
@@ -423,6 +459,8 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
         if (syscallno == SYS_ipc_recv) return sys_ipc_recv((void *)a1);
 
         if (syscallno == SYS_env_set_trapframe) return sys_env_set_trapframe((envid_t)a1, (struct Trapframe *)a2);
+
+        if (syscallno == SYS_env_exec) return sys_env_exec((uint32_t)a1, (uint32_t)a2, (struct Proghdr *)a3, (uint32_t)a4);
 
         return -E_INVAL;
 

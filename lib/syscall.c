@@ -117,3 +117,9 @@ sys_ipc_recv(void *dstva)
 	return syscall(SYS_ipc_recv, 1, (uint32_t)dstva, 0, 0, 0, 0);
 }
 
+int
+sys_env_exec(uint32_t esp, uint32_t eip, struct Proghdr *ph, uint32_t e_phnum)
+{
+	return syscall(SYS_env_exec, 1, esp, eip, (uint32_t) ph, e_phnum, 0);
+}
+
